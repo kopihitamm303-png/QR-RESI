@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QR Resi Fix Mode</title>
+<title>QR Resi Final</title>
 
 <script src="qrcode.min.js"></script>
 
@@ -54,7 +54,7 @@ button {
 
   <div class="title">QR Resi Generator</div>
 
-  <textarea id="resiInput" placeholder="input text"></textarea>
+  <textarea id="resiInput" placeholder="Paste dari WhatsApp"></textarea>
 
 <button onclick="generatePDF()">Generate</button>
 
@@ -68,7 +68,7 @@ async function generatePDF() {
   const input = document.getElementById("resiInput").value;
 
   // =========================
-  // 🔥 AUTO CLEAN RESI WA
+  // 🔥 AUTO CLEAN WA
   // =========================
   const resiList = [...new Set(
     input
@@ -89,29 +89,32 @@ async function generatePDF() {
   // ⚙️ SETTING UTAMA
   // =========================
 
-  const paperWidth = 58;
+  const paperWidth = 58; // lebar kertas
 
-  const qrSize = 28; // ukuran QR FIX
+  const qrSize = 28; // 🔺 ukuran QR (diperkecil dikit biar aman)
 
-  const gapX = 2; // jarak kiri kanan
+  const gapX = 1; // jarak antar QR kiri-kanan
+
+  const marginX = 2; // 🔥 margin kiri kanan (WAJIB BIAR TIDAK KEPOTONG)
 
   const textGap = 1; // jarak QR ke teks
 
   const rowGap = 1; // jarak antar baris
 
-  const marginTop = 1; // atas
+  const marginTop = 1;
 
-  const marginBottom = 2; // bawah
+  const marginBottom = 2;
 
   const fontSize = 9;
 
   // =========================
-  // 🔥 PERHITUNGAN FIX (INI KUNCI)
+  // ⚙️ PERHITUNGAN LAYOUT
   // =========================
 
-  const colWidth = (paperWidth - gapX) / 2;
+  const usableWidth = paperWidth - (marginX * 2);
 
-  // 👉 tinggi baris dibuat cukup longgar agar tidak ke-clip
+  const colWidth = (usableWidth - gapX) / 2;
+
   const rowHeight = qrSize + textGap + 8 + rowGap;
 
   let pdf = null;
@@ -125,7 +128,6 @@ async function generatePDF() {
 
     let rows = Math.ceil(itemsThisPage / 2);
 
-    // 🔥 TINGGI PURE (tanpa hack)
     let pageHeight = rows * rowHeight + marginTop + marginBottom;
 
     if (!pdf) {
@@ -147,19 +149,20 @@ async function generatePDF() {
         const resi = resiList[i];
 
         // =========================
-        // 🔲 QR
+        // 🔲 QR GENERATE
         // =========================
         const canvas = document.createElement("canvas");
         await QRCode.toCanvas(canvas, resi, { width: 200 });
 
         const img = canvas.toDataURL("image/png");
 
-        let x = col * (colWidth + gapX) + (colWidth - qrSize)/2;
+        // 🔥 posisi X sudah pakai margin (ANTI KEPOTONG)
+        let x = marginX + col * (colWidth + gapX) + (colWidth - qrSize)/2;
 
         pdf.addImage(img, "PNG", x, y, qrSize, qrSize);
 
         // =========================
-        // 🔤 TEXT
+        // 🔤 TEXT RESI
         // =========================
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(fontSize);
