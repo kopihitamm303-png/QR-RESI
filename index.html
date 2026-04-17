@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Resi</title>
+
+<script src="qrcode.min.js"></script>
+
+<script src="jspdf.umd.min.js"></script>
+
+<style>
+body {
+  font-family: Arial;
+  margin: 0;
+  background: #f5f7fa;
+}
+
+.container {
+  padding: 16px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+textarea {
+  width: 100%;
+  height: 160px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  padding: 10px;
+  font-size: 14px;
+}
+
+button {
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  background: #2d8cff;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.loading {
+  display: none;
+  text-align: center;
+  margin-top: 10px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="title">QR Resi Generator</div>
+
+  <textarea id="resiInput" placeholder="Masukkan resi (1 per baris)"></textarea>
+
+<button onclick="generatePDF()">Generate PDF</button>
+
+  <div class="loading" id="loading">Memproses...</div>
+
+</div>
+
+<script>
+async function generatePDF() {
+
+  const loading = document.getElementById("loading");
+  loading.style.display = "block";
+
+  const { jsPDF } = window.jspdf;
+
+  const input = document.getElementById("resiInput").value.trim();
+  const resiList = input.split("\n").map(r => r.trim()).filter(r => r);
+
+  if (resiList.length === 0) {
+    alert("Masukkan resi dulu");
+    loading.style.display = "none";
+    return;
+  }
+
+  const paperWidth = 58;
+  const qrSize = 28;
+  const gapX = 2;
+  const textGap = 2;
+  const rowGap = 1;
+
+  const colWidth = (paperWidth - gapX) / 2;
+  const rowHeight = qrSize + textGap + 2 + rowGap;
+
+  let pdf = null;
+  let i = 0;
+
+  while (i < resiList.length) {
+
+    let remaining = resiList.length - i;
+    let itemsThisPage = Math.min(remaining, 10);
+    let rows = Math.ceil(itemsThisPage / 2);
+    let pageHeight = rows * rowHeight + 6;
+
+    if (!pdf) {
+      pdf = new jsPDF({ unit: "mm", format: [paperWidth, pageHeight] });
+    } else {
+      pdf.addPage([paperWidth, pageHeight]);
+    }
+
+    let y = 3;
+
+    for (let r = 0; r < rows; r++) {
+      for (let col = 0; col < 2; col++) {
+
+        if (i >= resiList.length) break;
+
+        const resi = resiList[i];
+
+        const canvas = document.createElement("canvas");
+        await QRCode.toCanvas(canvas, resi, { width: 200 });
+
+        const img = canvas.toDataURL("image/png");
+
+        let x = col * (colWidth + gapX) + (colWidth - qrSize)/2;
+
+        pdf.addImage(img, "PNG", x, y, qrSize, qrSize);
+
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(7);
+
+        pdf.text(resi, x + qrSize/2, y + qrSize + textGap, {
+          align: "center"
+        });
+
+        i++;
+      }
+
+      y += rowHeight;
+    }
+  }
+
+  // 🔥 OPEN PDF (MANUAL SAVE)
+  const blob = pdf.output('blob');
+  const url = URL.createObjectURL(blob);
+
+  loading.style.display = "none";
+
+  // buka PDF di layar
+  window.location.href = url;
+
+  setTimeout(() => {
+    alert("Gunakan menu Share / Print untuk menyimpan atau mencetak");
+  }, 500);
+}
+</script>
+
+</body>
+</html>
