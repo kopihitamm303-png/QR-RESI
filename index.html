@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QR Resi Final</title>
+<title>QR Resi</title>
 
 <script src="qrcode.min.js"></script>
 
@@ -63,9 +63,9 @@ button {
 
   <div class="title">QR Resi Generator</div>
 
-  <textarea id="resiInput" placeholder="Paste dari WhatsApp langsung"></textarea>
+  <textarea id="resiInput" placeholder="Paste dari WhatsApp"></textarea>
 
-<button onclick="generatePDF()">Generate PDF</button>
+<button onclick="generatePDF()">Generate & Print</button>
 
   <div class="loading" id="loading">Memproses...</div>
 
@@ -81,35 +81,36 @@ async function generatePDF() {
 
   const input = document.getElementById("resiInput").value;
 
-  // 🔥 AUTO CLEAN + SUPPORT HURUF BESAR KECIL
+  // 🔥 AUTO CLEAN + SUPPORT SEMUA CASE
   const resiList = [...new Set(
     input
       .split("\n")
       .map(r => {
-        const match = r.match(/jx\d+/i); // case insensitive
+        const match = r.match(/jx\d+/i);
         return match ? match[0].toUpperCase() : null;
       })
       .filter(r => r)
   )];
 
   if (resiList.length === 0) {
-    alert("Tidak ada resi yang valid");
+    alert("Tidak ada resi");
     loading.style.display = "none";
     return;
   }
 
-  // 🔥 SETTING UTAMA
+  // 🔥 SETTING
   const paperWidth = 58;
 
-  const qrSize = 28; // FIX (tidak berubah)
+  const qrSize = 28;
   const gapX = 2;
-  const textGap = 2;
-  const rowGap = 2;
+
+  const textGap = 1;   // 🔽 lebih rapat
+  const rowGap = 1;    // 🔽 lebih rapat
 
   const colWidth = (paperWidth - gapX) / 2;
 
-  // 🔥 tinggi baris FIX
-  const rowHeight = qrSize + textGap + 6 + rowGap;
+  // 🔥 SUPER RAPAT (hemat kertas)
+  const rowHeight = qrSize + textGap + 3 + rowGap;
 
   let pdf = null;
   let i = 0;
@@ -120,7 +121,7 @@ async function generatePDF() {
     let itemsThisPage = Math.min(remaining, 10);
     let rows = Math.ceil(itemsThisPage / 2);
 
-    let pageHeight = rows * rowHeight + 6;
+    let pageHeight = rows * rowHeight + 4;
 
     if (!pdf) {
       pdf = new jsPDF({ unit: "mm", format: [paperWidth, pageHeight] });
@@ -128,7 +129,7 @@ async function generatePDF() {
       pdf.addPage([paperWidth, pageHeight]);
     }
 
-    let y = 3;
+    let y = 2;
 
     for (let r = 0; r < rows; r++) {
       for (let col = 0; col < 2; col++) {
@@ -147,7 +148,7 @@ async function generatePDF() {
         pdf.addImage(img, "PNG", x, y, qrSize, qrSize);
 
         pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(10);
+        pdf.setFontSize(7);
 
         pdf.text(resi, x + qrSize/2, y + qrSize + textGap, {
           align: "center"
@@ -162,7 +163,11 @@ async function generatePDF() {
 
   loading.style.display = "none";
 
-  pdf.save("qr-resi.pdf");
+  // 🔥 OPEN LANGSUNG (tidak download)
+  const blob = pdf.output('blob');
+  const url = URL.createObjectURL(blob);
+
+  window.open(url, '_blank');
 }
 </script>
 
