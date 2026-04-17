@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QR Resi Final</title>
+<title>QR Resi Fix Mode</title>
 
 <script src="qrcode.min.js"></script>
 
@@ -54,7 +54,7 @@ button {
 
   <div class="title">QR Resi Generator</div>
 
-  <textarea id="resiInput" placeholder="Paste dari WhatsApp"></textarea>
+  <textarea id="resiInput" placeholder="input text"></textarea>
 
 <button onclick="generatePDF()">Generate</button>
 
@@ -74,7 +74,7 @@ async function generatePDF() {
     input
       .split("\n")
       .map(r => {
-        const match = r.match(/jx\d+/i); // support huruf kecil/besar
+        const match = r.match(/jx\d+/i);
         return match ? match[0].toUpperCase() : null;
       })
       .filter(r => r)
@@ -86,36 +86,33 @@ async function generatePDF() {
   }
 
   // =========================
-  // ⚙️ SETTING UTAMA (EDIT DI SINI)
+  // ⚙️ SETTING UTAMA
   // =========================
 
-  const paperWidth = 58; // lebar kertas thermal
+  const paperWidth = 58;
 
-  const qrSize = 28; // 🔺 ukuran QR (FIX, tidak berubah)
+  const qrSize = 28; // ukuran QR FIX
 
-  const gapX = 2; // ↔️ jarak antar QR kiri-kanan
+  const gapX = 2; // jarak kiri kanan
 
-  const textGap = 1; // ↕️ jarak QR ke teks
+  const textGap = 1; // jarak QR ke teks
 
-  const rowGap = 1; // ↕️ jarak antar baris
+  const rowGap = 1; // jarak antar baris
 
   const marginTop = 1; // atas
 
-  const marginBottom = 2; // bawah (dibesarkan biar aman)
+  const marginBottom = 2; // bawah
 
-  const fontSize = 9; // ukuran teks
-
-  // 🔥 TINGGI MINIMUM (PENTING BANGET)
-  const minPageHeight = 120; 
-  // 👉 ini mencegah QR membesar saat resi sedikit
+  const fontSize = 9;
 
   // =========================
-  // ⚙️ PERHITUNGAN
+  // 🔥 PERHITUNGAN FIX (INI KUNCI)
   // =========================
 
   const colWidth = (paperWidth - gapX) / 2;
 
-  const rowHeight = qrSize + textGap + 5 + rowGap;
+  // 👉 tinggi baris dibuat cukup longgar agar tidak ke-clip
+  const rowHeight = qrSize + textGap + 8 + rowGap;
 
   let pdf = null;
   let i = 0;
@@ -124,19 +121,18 @@ async function generatePDF() {
 
     let remaining = resiList.length - i;
 
-    let itemsThisPage = Math.min(remaining, 10); // max 10 resi
+    let itemsThisPage = Math.min(remaining, 10);
 
     let rows = Math.ceil(itemsThisPage / 2);
 
+    // 🔥 TINGGI PURE (tanpa hack)
     let pageHeight = rows * rowHeight + marginTop + marginBottom;
 
-    // 🔥 FIX UTAMA: paksa tinggi minimum
-    if (pageHeight < minPageHeight) {
-      pageHeight = minPageHeight;
-    }
-
     if (!pdf) {
-      pdf = new jsPDF({ unit: "mm", format: [paperWidth, pageHeight] });
+      pdf = new jsPDF({
+        unit: "mm",
+        format: [paperWidth, pageHeight]
+      });
     } else {
       pdf.addPage([paperWidth, pageHeight]);
     }
@@ -151,7 +147,7 @@ async function generatePDF() {
         const resi = resiList[i];
 
         // =========================
-        // 🔲 GENERATE QR
+        // 🔲 QR
         // =========================
         const canvas = document.createElement("canvas");
         await QRCode.toCanvas(canvas, resi, { width: 200 });
@@ -163,7 +159,7 @@ async function generatePDF() {
         pdf.addImage(img, "PNG", x, y, qrSize, qrSize);
 
         // =========================
-        // 🔤 TEXT RESI
+        // 🔤 TEXT
         // =========================
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(fontSize);
@@ -180,7 +176,7 @@ async function generatePDF() {
   }
 
   // =========================
-  // 📄 OPEN PDF (TANPA DOWNLOAD)
+  // 📄 OPEN PDF
   // =========================
   const blob = pdf.output('blob');
   const url = URL.createObjectURL(blob);
