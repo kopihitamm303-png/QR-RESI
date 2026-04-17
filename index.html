@@ -4,13 +4,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QR Resi</title>
-
-<!-- Library QR -->
+<title>QR Resi Final</title>
 
 <script src="qrcode.min.js"></script>
-
-<!-- Library PDF -->
 
 <script src="jspdf.umd.min.js"></script>
 
@@ -28,28 +24,25 @@ body {
 .title {
   font-size: 20px;
   font-weight: bold;
-  margin-bottom: 10px;
 }
 
 textarea {
   width: 100%;
-  height: 160px;
+  height: 150px;
+  margin-top: 10px;
   border-radius: 10px;
-  border: 1px solid #ccc;
   padding: 10px;
-  font-size: 14px;
 }
 
 button {
   width: 100%;
-  margin-top: 12px;
+  margin-top: 10px;
   padding: 14px;
   border: none;
   border-radius: 10px;
   background: #2d8cff;
   color: white;
   font-size: 16px;
-  font-weight: bold;
 }
 </style>
 
@@ -63,7 +56,7 @@ button {
 
   <textarea id="resiInput" placeholder="Paste dari WhatsApp"></textarea>
 
-<button onclick="generatePDF()">Generate & Print</button>
+<button onclick="generatePDF()">Generate</button>
 
 </div>
 
@@ -81,57 +74,48 @@ async function generatePDF() {
     input
       .split("\n")
       .map(r => {
-        // ambil hanya kode JX + angka (case insensitive)
-        const match = r.match(/jx\d+/i);
+        const match = r.match(/jx\d+/i); // support huruf kecil/besar
         return match ? match[0].toUpperCase() : null;
       })
       .filter(r => r)
   )];
 
   if (resiList.length === 0) {
-    alert("Tidak ada resi");
+    alert("Tidak ada resi valid");
     return;
   }
 
   // =========================
-  // ⚙️ SETTING UTAMA (EDIT DISINI)
+  // ⚙️ SETTING UTAMA (EDIT DI SINI)
   // =========================
 
-  const paperWidth = 58; 
-  // 👉 Lebar kertas (58mm thermal)
+  const paperWidth = 58; // lebar kertas thermal
 
-  const qrSize = 28; 
-  // 👉 UKURAN QR (SEMUA QR SAMA)
-  // 🔺 ini yang menentukan besar kecil QR
+  const qrSize = 28; // 🔺 ukuran QR (FIX, tidak berubah)
 
-  const gapX = 2; 
-  // 👉 JARAK ANTAR QR KE SAMPING (horizontal)
+  const gapX = 2; // ↔️ jarak antar QR kiri-kanan
 
-  const textGap = 1; 
-  // 👉 JARAK QR KE TEXT DI BAWAH
+  const textGap = 1; // ↕️ jarak QR ke teks
 
-  const rowGap = 1; 
-  // 👉 JARAK ANTAR BARIS (KE BAWAH)
-  // 🔽 kecil = hemat kertas
+  const rowGap = 1; // ↕️ jarak antar baris
 
-  const marginTop = 1; 
-  // 👉 JARAK DARI ATAS KERTAS
+  const marginTop = 1; // atas
 
-  const marginBottom = 1; 
-  // 👉 JARAK BAWAH (BIAR TIDAK KEPOTONG)
+  const marginBottom = 2; // bawah (dibesarkan biar aman)
 
-  const fontSize = 9; 
-  // 👉 UKURAN TEXT RESI
+  const fontSize = 9; // ukuran teks
+
+  // 🔥 TINGGI MINIMUM (PENTING BANGET)
+  const minPageHeight = 120; 
+  // 👉 ini mencegah QR membesar saat resi sedikit
 
   // =========================
-  // ⚙️ PERHITUNGAN OTOMATIS
+  // ⚙️ PERHITUNGAN
   // =========================
 
   const colWidth = (paperWidth - gapX) / 2;
-  // 👉 lebar tiap kolom QR
 
-  const rowHeight = qrSize + textGap + 2 + rowGap;
-  // 👉 tinggi 1 baris (QR + text + jarak)
+  const rowHeight = qrSize + textGap + 5 + rowGap;
 
   let pdf = null;
   let i = 0;
@@ -140,14 +124,16 @@ async function generatePDF() {
 
     let remaining = resiList.length - i;
 
-    let itemsThisPage = Math.min(remaining, 10);
-    // 👉 max 10 resi per halaman
+    let itemsThisPage = Math.min(remaining, 10); // max 10 resi
 
     let rows = Math.ceil(itemsThisPage / 2);
-    // 👉 hitung jumlah baris
 
     let pageHeight = rows * rowHeight + marginTop + marginBottom;
-    // 👉 tinggi halaman otomatis (hemat kertas)
+
+    // 🔥 FIX UTAMA: paksa tinggi minimum
+    if (pageHeight < minPageHeight) {
+      pageHeight = minPageHeight;
+    }
 
     if (!pdf) {
       pdf = new jsPDF({ unit: "mm", format: [paperWidth, pageHeight] });
@@ -165,7 +151,7 @@ async function generatePDF() {
         const resi = resiList[i];
 
         // =========================
-        // 🔥 GENERATE QR
+        // 🔲 GENERATE QR
         // =========================
         const canvas = document.createElement("canvas");
         await QRCode.toCanvas(canvas, resi, { width: 200 });
@@ -173,7 +159,6 @@ async function generatePDF() {
         const img = canvas.toDataURL("image/png");
 
         let x = col * (colWidth + gapX) + (colWidth - qrSize)/2;
-        // 👉 posisi kiri / kanan QR
 
         pdf.addImage(img, "PNG", x, y, qrSize, qrSize);
 
@@ -191,12 +176,11 @@ async function generatePDF() {
       }
 
       y += rowHeight;
-      // 👉 turun ke baris berikutnya
     }
   }
 
   // =========================
-  // 📄 OPEN PDF LANGSUNG
+  // 📄 OPEN PDF (TANPA DOWNLOAD)
   // =========================
   const blob = pdf.output('blob');
   const url = URL.createObjectURL(blob);
