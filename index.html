@@ -80,7 +80,13 @@ async function generatePDF() {
   const { jsPDF } = window.jspdf;
 
   const input = document.getElementById("resiInput").value.trim();
-  const resiList = input.split("\n").map(r => r.trim()).filter(r => r);
+  const resiList = input
+  .split("\n")
+  .map(r => {
+    const match = r.match(/JX\d+/i);
+    return match ? match[0].toUpperCase() : null;
+  })
+  .filter(r => r);
 
   if (resiList.length === 0) {
     alert("Masukkan resi dulu");
