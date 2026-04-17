@@ -138,7 +138,7 @@ async function generatePDF() {
         pdf.addImage(img, "PNG", x, y, qrSize, qrSize);
 
         pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(10);
+        pdf.setFontSize(15);
 
         pdf.text(resi, x + qrSize/2, y + qrSize + textGap, {
           align: "center"
