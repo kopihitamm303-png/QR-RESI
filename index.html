@@ -61,7 +61,7 @@ button {
 
   <div class="title">QR Resi Generator</div>
 
-  <textarea id="resiInput" placeholder="isi text"></textarea>
+  <textarea id="resiInput" placeholder="Paste dari WhatsApp"></textarea>
 
 <button onclick="generatePDF()">Generate & Print</button>
 
@@ -100,7 +100,7 @@ async function generatePDF() {
   const paperWidth = 58; 
   // 👉 Lebar kertas (58mm thermal)
 
-  const qrSize = 35; 
+  const qrSize = 28; 
   // 👉 UKURAN QR (SEMUA QR SAMA)
   // 🔺 ini yang menentukan besar kecil QR
 
@@ -114,13 +114,13 @@ async function generatePDF() {
   // 👉 JARAK ANTAR BARIS (KE BAWAH)
   // 🔽 kecil = hemat kertas
 
-  const marginTop = 2; 
+  const marginTop = 1; 
   // 👉 JARAK DARI ATAS KERTAS
 
   const marginBottom = 1; 
   // 👉 JARAK BAWAH (BIAR TIDAK KEPOTONG)
 
-  const fontSize = 10; 
+  const fontSize = 9; 
   // 👉 UKURAN TEXT RESI
 
   // =========================
@@ -130,7 +130,7 @@ async function generatePDF() {
   const colWidth = (paperWidth - gapX) / 2;
   // 👉 lebar tiap kolom QR
 
-  const rowHeight = qrSize + textGap + 5 + rowGap;
+  const rowHeight = qrSize + textGap + 2 + rowGap;
   // 👉 tinggi 1 baris (QR + text + jarak)
 
   let pdf = null;
